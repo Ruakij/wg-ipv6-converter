@@ -79,7 +79,7 @@ func main() {
 		var wgConfig wgtypes.Config
         wgConfig.Peers = make([]wgtypes.PeerConfig, len(wgDevice.Peers))
 
-        for _, peer := range wgDevice.Peers {
+        for i, peer := range wgDevice.Peers {
             // Create slice with initial size of 2xAllowedIPs as the max we expect
             var allowedIPs = make([]net.IPNet, len(peer.AllowedIPs)*2)
             // Copy in all old entries
@@ -102,7 +102,7 @@ func main() {
                 }
             }
 
-            wgConfig.Peers = append(wgConfig.Peers, wgtypes.PeerConfig{AllowedIPs: allowedIPs})
+            wgConfig.Peers[i] = wgtypes.PeerConfig{AllowedIPs: allowedIPs}
         }
 
         err = client.ConfigureDevice(iface, wgConfig)
