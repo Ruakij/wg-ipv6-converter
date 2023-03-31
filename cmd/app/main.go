@@ -123,9 +123,13 @@ func main() {
             }
         }
 
-        err = client.ConfigureDevice(iface, wgConfig)
-        if(err != nil){
-            logger.Error.Fatalf("Error configuring wg-device '%s': %s", iface, err)
+        if(len(wgConfig.Peers) == 0){
+            logger.Info.Println("No changes, skipping")
+        } else {
+            err = client.ConfigureDevice(iface, wgConfig)
+            if(err != nil){
+                logger.Error.Fatalf("Error configuring wg-device '%s': %s", iface, err)
+            }
         }
         
         // Sleep for 300 seconds before running the loop again
