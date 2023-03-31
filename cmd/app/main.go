@@ -40,7 +40,6 @@ func main() {
     addrs, err := netlink.AddrList(netInterface, netlink.FAMILY_V4)
     if err != nil {
         logger.Error.Fatal(err)
-        return
     }
 	if(len(addrs) == 0){
 		logger.Error.Fatal("Interface doesnt have IPv4-Adresses")
@@ -56,19 +55,16 @@ func main() {
     ipv6Addr, err := netlink.ParseAddr(ipv6AddrStr)
     if err != nil {
         logger.Error.Fatal(err)
-        return
     }
     err = netlink.AddrAdd(netInterface, ipv6Addr)
     if err != nil {
         logger.Error.Fatal(err)
-        return
     }
 
     // Create a WireGuard client
     client, err := wgctrl.New()
     if err != nil {
         logger.Error.Fatal(err)
-        return
     }
     defer client.Close()
 
