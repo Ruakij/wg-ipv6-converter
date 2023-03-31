@@ -7,7 +7,8 @@ import (
 	"time"
 
 	envChecks "git.ruekov.eu/ruakij/routingtabletowg/lib/environmentchecks"
-
+    "git.ruekov.eu/ruakij/routingtabletowg/lib/wgchecks/netchecks"
+    
 	"github.com/vishvananda/netlink"
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
@@ -94,6 +95,11 @@ func main() {
                     ipv6, err := netlink.ParseIPNet(ipv6Address)
                     if err != nil {
                         logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Address, peer.PublicKey, err)
+                        continue
+                    }
+                    
+                    // Check if already set
+                    if i, _ := netchecks.IPNetIndexByIPNet(&peer.AllowedIPs, ipv6); i != -1 {
                         continue
                     }
 
