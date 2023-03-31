@@ -7,7 +7,7 @@ require golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230215201556-9c5414ab4bde
 require github.com/vishvananda/netns v0.0.4 // indirect
 
 require (
-	git.ruekov.eu/ruakij/routingtabletowg v0.0.0-20230330122950-021bd254f1a4
+	git.ruekov.eu/ruakij/routingtabletowg v0.0.0-20230331142222-dcc0b6607b52
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/mdlayher/genetlink v1.3.1 // indirect
