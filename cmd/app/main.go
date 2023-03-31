@@ -91,14 +91,14 @@ func main() {
                     // Convert the IPv4 allowed-ip to an IPv6 address
                     ipv6Suffix := fmt.Sprintf("%02x%02x", allowedIP.IP[2], allowedIP.IP[3])
                     ipv6Address := ipv6Prefix + ipv6Suffix + "/128"
-                    ipv6, err := netlink.ParseAddr(ipv6Address)
+                    ipv6, err := netlink.ParseIPNet(ipv6Address)
                     if err != nil {
                         logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Address, peer.PublicKey, err)
                         continue
                     }
 
                     // Add the IPv6 allowed-ip to the peer
-                    allowedIPs = append(allowedIPs, *ipv6.IPNet)
+                    allowedIPs = append(allowedIPs, *ipv6)
                 }
             }
 
