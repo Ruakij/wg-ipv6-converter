@@ -59,7 +59,12 @@ func main() {
     }
     err = netlink.AddrAdd(netInterface, ipv6Addr)
     if err != nil {
-        logger.Error.Fatal(err)
+        switch {
+        case os.IsExist(err):
+            logger.Warn.Println("Address is already set on interface")
+        default:
+            logger.Error.Fatalf("Failed to set address on interface: %v", err)
+        }
     }
 
     // Create a WireGuard client
@@ -78,13 +83,11 @@ func main() {
         }
 
 		var wgConfig wgtypes.Config
-        wgConfig.Peers = make([]wgtypes.PeerConfig, len(wgDevice.Peers))
+        wgConfig.Peers = make([]wgtypes.PeerConfig, 0, len(wgDevice.Peers))
 
-        for i, peer := range wgDevice.Peers {
-            // Create slice with initial size of 2xAllowedIPs as the max we expect
-            var allowedIPs = make([]net.IPNet, len(peer.AllowedIPs)*2)
-            // Copy in all old entries
-            copy(allowedIPs, peer.AllowedIPs)
+        for _, peer := range wgDevice.Peers {
+            // Create slice for 1 expected addition
+            var addAllowedIPs = make([]net.IPNet, 0, 1)
 
             // Loop through the allowed-ips and add the ones starting with 100.100
             for _, allowedIP := range peer.AllowedIPs {
@@ -104,18 +107,27 @@ func main() {
                     }
 
                     // Add the IPv6 allowed-ip to the peer
-                    allowedIPs = append(allowedIPs, *ipv6)
+                    addAllowedIPs = append(addAllowedIPs, *ipv6)
                 }
             }
 
-            wgConfig.Peers[i] = wgtypes.PeerConfig{AllowedIPs: allowedIPs}
+            if(len(addAllowedIPs) > 0){
+                // Create peer-config
+                peerConfig := wgtypes.PeerConfig{
+                    PublicKey: peer.PublicKey,
+                    AllowedIPs: append(peer.AllowedIPs, addAllowedIPs...),
+                }
+
+                // Add entry
+                wgConfig.Peers = append(wgConfig.Peers, peerConfig)
+            }
         }
 
         err = client.ConfigureDevice(iface, wgConfig)
-		if(err != nil){
-			logger.Error.Fatalf("Error configuring wg-device '%s': %s", iface, err)
-		}
-
+        if(err != nil){
+            logger.Error.Fatalf("Error configuring wg-device '%s': %s", iface, err)
+        }
+        
         // Sleep for 300 seconds before running the loop again
         time.Sleep(time.Second * 300)
     }
