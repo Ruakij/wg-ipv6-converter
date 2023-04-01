@@ -34,7 +34,6 @@ func main() {
     netInterface, err := netlink.LinkByName(iface)
     if err != nil {
         logger.Error.Fatal(err)
-        return
     }
 
     // Get the IPv4 address of the interface	
