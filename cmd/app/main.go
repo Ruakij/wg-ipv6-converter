@@ -18,7 +18,7 @@ var envRequired = []string{
 	"INTERFACE",
 }
 var envDefaults = map[string]string{
-	"IPV6_PREFIX": "fd00::",
+    "IPV6_FORMAT": "fc12::%02x%02x:%02x%02x/%s",
 }
 
 func main() {
@@ -36,27 +36,29 @@ func main() {
         logger.Error.Fatal(err)
     }
 
-    // Get the IPv4 address of the interface	
+    ipv6Format := os.Getenv("IPV6_FORMAT")
+    ipv6TestStr := *convertIPv4ToIPv6(&ipv6Format, &net.IPNet{IP: net.IPv4(1,1,1,1), Mask: net.CIDRMask(24, net.IPv4len)})
+    _, err = netlink.ParseIPNet(ipv6TestStr)
+    if err != nil {
+        logger.Error.Fatalf("IPV6_FORMAT is invalid: %s", err)
+    }
+
+    // Get the IPv4 address of the interface
     addrs, err := netlink.AddrList(netInterface, netlink.FAMILY_V4)
     if err != nil {
         logger.Error.Fatal(err)
     }
-	if(len(addrs) == 0){
-		logger.Error.Fatal("Interface doesnt have IPv4-Adresses")
-	}
-    ipv4Addr := addrs[0].IP.String()
-
-    // Convert the IPv4 address to an IPv6 address
-    ipv6Prefix := "fd20::"
-    ipv6Suffix := fmt.Sprintf("%02x%02x", ipv4Addr[12], ipv4Addr[13])
-    ipv6AddrStr := ipv6Prefix + ipv6Suffix + "/112"
+    if(len(addrs) == 0){
+        logger.Error.Fatal("Interface doesnt have IPv4-Adresses")
+    }
 
     // Add the IPv6 address to the interface
-    ipv6Addr, err := netlink.ParseAddr(ipv6AddrStr)
+    ipv6Str := *convertIPv4ToIPv6(&ipv6Format, addrs[0].IPNet)
+    ipv6, err := netlink.ParseAddr(ipv6Str)
     if err != nil {
         logger.Error.Fatal(err)
     }
-    err = netlink.AddrAdd(netInterface, ipv6Addr)
+    err = netlink.AddrAdd(netInterface, ipv6)
     if err != nil {
         switch {
         case os.IsExist(err):
@@ -90,13 +92,12 @@ func main() {
 
             // Loop through the allowed-ips and add the ones starting with 100.100
             for _, allowedIP := range peer.AllowedIPs {
-                if allowedIP.String()[:7] == "100.100" {
+                if allowedIP.String()[:len(filterPrefix)] == filterPrefix {
                     // Convert the IPv4 allowed-ip to an IPv6 address
-                    ipv6Suffix := fmt.Sprintf("%02x%02x", allowedIP.IP[2], allowedIP.IP[3])
-                    ipv6Address := ipv6Prefix + ipv6Suffix + "/128"
-                    ipv6, err := netlink.ParseIPNet(ipv6Address)
+                    ipv6Str := *convertIPv4ToIPv6(&ipv6Format, &net.IPNet{IP: allowedIP.IP, Mask: allowedIP.Mask})
+                    ipv6, err := netlink.ParseIPNet(ipv6Str)
                     if err != nil {
-                        logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Address, peer.PublicKey, err)
+                        logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Str, peer.PublicKey, err)
                         continue
                     }
                     
@@ -134,4 +135,11 @@ func main() {
         // Sleep for 300 seconds before running the loop again
         time.Sleep(time.Second * 300)
     }
+}
+
+func convertIPv4ToIPv6(ipv6Format *string, ipv4 *net.IPNet) (*string) {
+    CIDR, _ := ipv4.Mask.Size()
+    // Run format
+    ipv6Str := fmt.Sprintf(*ipv6Format, (*ipv4).IP[0], (*ipv4).IP[1], (*ipv4).IP[2], (*ipv4).IP[4], 128-CIDR)
+    return &ipv6Str
 }
