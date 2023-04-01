@@ -19,6 +19,7 @@ var envRequired = []string{
 }
 var envDefaults = map[string]string{
     "IPV6_FORMAT": "fc12::%02x%02x:%02x%02x/%s",
+    "FILTER_PREFIX": "100.100",
 }
 
 func main() {
@@ -42,6 +43,9 @@ func main() {
     if err != nil {
         logger.Error.Fatalf("IPV6_FORMAT is invalid: %s", err)
     }
+
+    filterPrefix := os.Getenv("FILTER_PREFIX")
+
 
     // Get the IPv4 address of the interface
     addrs, err := netlink.AddrList(netInterface, netlink.FAMILY_V4)
