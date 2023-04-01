@@ -144,6 +144,6 @@ func main() {
 func convertIPv4ToIPv6(ipv6Format *string, ipv4 *net.IPNet) (*string) {
     CIDR, _ := ipv4.Mask.Size()
     // Run format
-    ipv6Str := fmt.Sprintf(*ipv6Format, (*ipv4).IP[0], (*ipv4).IP[1], (*ipv4).IP[2], (*ipv4).IP[4], 128-CIDR)
+    ipv6Str := fmt.Sprintf(*ipv6Format, (*ipv4).IP[0], (*ipv4).IP[1], (*ipv4).IP[2], (*ipv4).IP[3], net.IPv6len*8-(net.IPv4len*8-CIDR))
     return &ipv6Str
 }
