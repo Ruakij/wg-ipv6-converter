@@ -71,16 +71,17 @@ Or using a systemd-service based on the example:
 [Unit]
 Description=WireGuard IPv6 converter for netbird
 BindsTo=netbird.service
+After=netbird.service
 
 [Service]
 Type=simple
+ExecStartPre=/bin/sleep 10
 ExecStart=/usr/local/bin/wg-ipv6-converter
 Restart=always
-RestartSec=60
-StandardOutput=syslog
-StandardError=syslog
+RestartSec=30
 
 Environment="INTERFACE=wt0"
+Environment="RECHECK_INTERVAL=60"
 
 [Install]
 WantedBy=multi-user.target
