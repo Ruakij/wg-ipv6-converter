@@ -18,7 +18,7 @@ var envRequired = []string{
 	"INTERFACE",
 }
 var envDefaults = map[string]string{
-    "IPV6_FORMAT": "fc12::%02x%02x:%02x%02x/%s",
+    "IPV6_FORMAT": "fc12::%02x%02x:%02x%02x/%d",
     "FILTER_PREFIX": "100.100",
 }
 
