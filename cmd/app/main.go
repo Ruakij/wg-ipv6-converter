@@ -100,7 +100,7 @@ func main() {
                 if allowedIP.String()[:len(filterPrefix)] == filterPrefix {
                     // Convert the IPv4 allowed-ip to an IPv6 address
                     ipv6Str := *convertIPv4ToIPv6(&ipv6Format, &allowedIP)
-                    logger.Info.Printf("Add converted AllowedIP %s -> %s to peer %s", allowedIP.String(), ipv6Str, peer.PublicKey)
+                    logger.Info.Printf("AllowedIP %s -> %s to peer %s", allowedIP.String(), ipv6Str, peer.PublicKey)
                     ipv6, err := netlink.ParseIPNet(ipv6Str)
                     if err != nil {
                         logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Str, peer.PublicKey, err)
