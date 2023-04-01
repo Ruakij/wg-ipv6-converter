@@ -62,6 +62,7 @@ func main() {
     if err != nil {
         logger.Error.Fatal(err)
     }
+    logger.Info.Printf("Adding converted %s -> %s to interface", addrs[0].IPNet.String(), ipv6Str)
     err = netlink.AddrAdd(netInterface, ipv6)
     if err != nil {
         switch {
@@ -98,7 +99,8 @@ func main() {
             for _, allowedIP := range peer.AllowedIPs {
                 if allowedIP.String()[:len(filterPrefix)] == filterPrefix {
                     // Convert the IPv4 allowed-ip to an IPv6 address
-                    ipv6Str := *convertIPv4ToIPv6(&ipv6Format, &net.IPNet{IP: allowedIP.IP, Mask: allowedIP.Mask})
+                    ipv6Str := *convertIPv4ToIPv6(&ipv6Format, &allowedIP)
+                    logger.Info.Printf("Add converted AllowedIP %s -> %s to peer %s", allowedIP.String(), ipv6Str, peer.PublicKey)
                     ipv6, err := netlink.ParseIPNet(ipv6Str)
                     if err != nil {
                         logger.Warn.Printf("Couldnt parse IPv6 address %s of peer %s: %s", ipv6Str, peer.PublicKey, err)
