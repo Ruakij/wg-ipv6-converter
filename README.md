@@ -82,7 +82,7 @@ Restart=always
 RestartSec=30
 
 Environment="INTERFACE=wt0"
-Environment="RECHECK_INTERVAL=60"
+Environment="RECHECK_INTERVAL=60s"
 
 [Install]
 WantedBy=multi-user.target
