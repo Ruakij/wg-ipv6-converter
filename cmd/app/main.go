@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"time"
 
 	envChecks "git.ruekov.eu/ruakij/routingtabletowg/lib/environmentchecks"
@@ -21,7 +20,7 @@ var envRequired = []string{
 var envDefaults = map[string]string{
     "IPV6_FORMAT": "fc12::%02x%02x:%02x%02x/%d",
     "FILTER_PREFIX": "100.100",
-    "RECHECK_INTERVAL": "300",
+    "RECHECK_INTERVAL": "5m",
 }
 
 func main() {
@@ -49,11 +48,10 @@ func main() {
     filterPrefix := os.Getenv("FILTER_PREFIX")
 
     checkIntervalStr := os.Getenv("RECHECK_INTERVAL")
-    checkIntervalSec, err := strconv.Atoi(checkIntervalStr)
+    checkInterval, err := time.ParseDuration(checkIntervalStr)
 	if err != nil {
-		logger.Error.Fatalf("Couldn't read RECHECK_INTERVAL '%s': %s", checkIntervalStr, err)
+		logger.Error.Fatalf("Couldn't parse RECHECK_INTERVAL '%s': %s", checkIntervalStr, err)
 	}
-    checkInterval := time.Second * time.Duration(checkIntervalSec)
 
     // Get the IPv4 address of the interface
     addrs, err := netlink.AddrList(netInterface, netlink.FAMILY_V4)
