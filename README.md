@@ -51,7 +51,8 @@ Variable|Description|Default
 -|-|-
 `INTERFACE`*        | Wireguard-Interface Name                  |
 `IPV6_FORMAT`       | Format to use for converting v4 to v6 <br> The CIDR-Mask gets translated using 128 - 24 - Mask <br> e.g. `10.0.100.5/16` -> `fc12::0a00:6405/96`   | `fc12::%02x%02x:%02x%02x/%d`
-`RECHECK_INTERVAL`  | Interval in seconds to recheck AllowedIPs entries in case something changed  | 300
+`FILTER_PREFIX`     | Prefix to filter for IP-Networks          | `100.100`
+`RECHECK_INTERVAL`  | Interval in go-time-format to recheck AllowedIPs entries in case something changed  | 5m
 
 *\* Required*
 
