@@ -58,25 +58,37 @@ func main() {
     if err != nil {
         logger.Error.Fatal(err)
     }
-    if(len(addrs) == 0){
-        logger.Warn.Println("Interface doesnt have IPv4-Adresses")
-    } else {
+    processedCount := 0
+    filteredCount := 0
+    for _, addr := range addrs {
+        // Check filter
+        if addr.String()[:len(filterPrefix)] != filterPrefix {
+            filteredCount++
+            continue
+        }
+
         // Add the IPv6 address to the interface
-        ipv6Str := *convertIPv4ToIPv6(&ipv6Format, addrs[0].IPNet)
+        ipv6Str := *convertIPv4ToIPv6(&ipv6Format, addr.IPNet)
         ipv6, err := netlink.ParseAddr(ipv6Str)
         if err != nil {
-            logger.Error.Fatal(err)
+            logger.Warn.Printf("failed parsing converted %s -> %s : %s", addr.IPNet.String(), ipv6Str, err)
+            continue
         }
-        logger.Info.Printf("Adding converted %s -> %s to interface", addrs[0].IPNet.String(), ipv6Str)
+
+        logger.Info.Printf("Adding converted %s -> %s to interface", addr.IPNet.String(), ipv6Str)
         err = netlink.AddrAdd(netInterface, ipv6)
         if err != nil {
             switch {
             case os.IsExist(err):
                 logger.Warn.Println("Address is already set on interface")
             default:
-                logger.Error.Fatalf("Failed to set address on interface: %v", err)
+                logger.Warn.Printf("Failed to set address on interface: %v", err)
             }
         }
+        processedCount++
+    }
+    if(processedCount != len(addrs)) {
+        logger.Warn.Printf("Not all Interface-Addresses were processed. Summary: %d processed, %d filtered, %d failed", processedCount, filteredCount, len(addrs)-processedCount-filteredCount)
     }
 
     // Create a WireGuard client
