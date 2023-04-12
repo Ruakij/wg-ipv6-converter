@@ -91,7 +91,7 @@ func main() {
                 case os.IsExist(err):
                     logger.Warn.Println("Address is already set on interface")
                 default:
-                    logger.Warn.Printf("Failed to set address on interface: %v", err)
+                    logger.Error.Fatalf("Failed to set address on interface: %v", err)
                 }
             }
             processedCount++
@@ -100,7 +100,7 @@ func main() {
             logger.Warn.Printf("Not all Interface-Addresses were processed. Summary: %d processed, %d filtered, %d failed", processedCount, filteredCount, len(addrs)-processedCount-filteredCount)
         }
 
-        
+
         // Get the WireGuard peers on the interface
         wgDevice, err := client.Device(iface)
         if err != nil {
