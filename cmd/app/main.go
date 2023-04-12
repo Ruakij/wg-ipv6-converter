@@ -53,7 +53,7 @@ func main() {
 		logger.Error.Fatalf("Couldn't parse RECHECK_INTERVAL '%s': %s", checkIntervalStr, err)
 	}
 
-    // Get the IPv4 address of the interface
+    // Get the IPv4 addresses of the interface
     addrs, err := netlink.AddrList(netInterface, netlink.FAMILY_V4)
     if err != nil {
         logger.Error.Fatal(err)
