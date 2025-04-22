@@ -17,6 +17,7 @@ import (
 var envRequired = []string{
 	"INTERFACE",
 }
+
 var envDefaults = map[string]string{
 	"IPV6_FORMAT":      "fc12::%02x%02x:%02x%02x/%d",
 	"FILTER_PREFIX":    "100.100",
@@ -111,7 +112,7 @@ func main() {
 
 		for _, peer := range wgDevice.Peers {
 			// Create slice for 1 expected addition
-			var addAllowedIPs = make([]net.IPNet, 0, 1)
+			addAllowedIPs := make([]net.IPNet, 0, 1)
 
 			// Loop through the allowed-ips and add the ones starting with 100.100
 			for _, allowedIP := range peer.AllowedIPs {
@@ -162,6 +163,14 @@ func main() {
 }
 
 func convertIPv4ToIPv6(ipv6Format *string, ipv4 *net.IPNet) *string {
+	// Check if this is a default route (0.0.0.0/0)
+	if ipv4.IP.Equal(net.IPv4zero) {
+		if ones, _ := ipv4.Mask.Size(); ones == 0 {
+			defaultRoute := "::/0"
+			return &defaultRoute
+		}
+	}
+
 	CIDR, _ := ipv4.Mask.Size()
 	// Run format
 	ipv6Str := fmt.Sprintf(*ipv6Format, (*ipv4).IP[0], (*ipv4).IP[1], (*ipv4).IP[2], (*ipv4).IP[3], net.IPv6len*8-(net.IPv4len*8-CIDR))
