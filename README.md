@@ -24,6 +24,8 @@ The program will convert IPv4-only wireguard-interfaces to IPv6. It converts and
 
 IPv6-Adresses are generated based on the IPv4-Adress.
 
+If not filtered out, then default routes (0.0.0.0/0) are handled specially and are converted to the IPv6 default route (::/0).
+
 Beware: This program needs `NET_ADMIN` privileges for setting Adresses and to access the wireguard-daemon.
 
 <br>
