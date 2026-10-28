@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # A CVE published after a merge is still our problem, so rescan daily.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A push supersedes the run of the commit before it, so drop that one instead of
+# waiting for a verdict on code nobody has any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: gofmt -l cmd | tee /dev/stderr | (! read -r)
+      - run: go mod tidy -diff
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: make build
+      # Read from a plain file so it can be bumped without a
+      # token carrying the workflow scope.
+      - id: lint-version
+        run: echo "version=$(cat hack/golangci-lint.version)" >> "$GITHUB_OUTPUT"
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ steps.lint-version.outputs.version }}
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Reachability-aware, so it only fails on vulnerabilities we actually call.
+      # It installs its own Go, hence no setup-go step; go-version-input must be
+      # cleared or it collides with go-version-file.
+      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+        with:
+          repo-checkout: false
+          go-version-file: go.mod
+          go-version-input: ""
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
