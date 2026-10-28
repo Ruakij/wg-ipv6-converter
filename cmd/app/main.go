@@ -1,13 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
+	"slices"
 	"time"
 
 	envChecks "git.ruekov.eu/ruakij/routingtabletowg/lib/environmentchecks"
-	"git.ruekov.eu/ruakij/routingtabletowg/lib/wgchecks/netchecks"
 
 	"github.com/vishvananda/netlink"
 	"golang.zx2c4.com/wireguard/wgctrl"
@@ -26,9 +27,10 @@ var envDefaults = map[string]string{
 
 func main() {
 	// Environment-vars
-	err := envChecks.HandleRequired(envRequired)
-	if err != nil {
-		logger.Error.Fatal(err)
+	for _, env := range envRequired {
+		if _, isSet := os.LookupEnv(env); !isSet {
+			logger.Error.Fatalf("env '%s' required, but not set", env)
+		}
 	}
 	envChecks.HandleDefaults(envDefaults)
 
@@ -127,7 +129,9 @@ func main() {
 					}
 
 					// Check if already set
-					if i, _ := netchecks.IPNetIndexByIPNet(&peer.AllowedIPs, ipv6); i != -1 {
+					if slices.ContainsFunc(peer.AllowedIPs, func(n net.IPNet) bool {
+						return n.IP.Equal(ipv6.IP) && bytes.Equal(n.Mask, ipv6.Mask)
+					}) {
 						continue
 					}
 

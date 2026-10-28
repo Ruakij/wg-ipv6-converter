@@ -1,5 +1,5 @@
 # ---- Build ----
-FROM golang:1.19-alpine AS build
+FROM golang:1.27-alpine AS build
 WORKDIR /build
 # Copy sources
 ADD . .
